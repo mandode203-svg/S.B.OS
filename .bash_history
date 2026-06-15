@@ -30,3 +30,21 @@ git add .
 git commit -m "premier commit"
 git remote add origin https://github.com/mandode/smartorder.git
 git push -u origin master
+cd /storage/emulated/0/1000209701/S.B.OS
+git init
+git add .
+git commit -m "Premier commit S.B.OS"
+ls /
+find / -name "S.B.OS" 2>/dev/null
+cd /home
+git remote add origin https://github.com/Mandode/S.B.OS.git
+git branch -M main
+git push -u origin main
+git remote set-url origin https://mandode203-svg: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@github.com/mandode203-svg/SmartOrder-.git
+git remote set-url origin https://mandode203-svg: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@github.com/mandode203-svg/SmartOrder-.git
+git push
+git add .
+cd /home/smartorder
+git add .
+git commit -m "StockShop complet - Produits, Categories, Fournisseurs, Inventaire, Achats, Reappro IA"
+git push
