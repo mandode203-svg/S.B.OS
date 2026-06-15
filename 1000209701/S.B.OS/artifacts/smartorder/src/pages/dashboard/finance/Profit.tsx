@@ -37,7 +37,7 @@ export default function Profit() {
     { label: "Profit ce mois", value: last ? formatFCFA(last.profit) : "—", icon: TrendingUp, color: last && last.profit >= 0 ? "text-green-400" : "text-red-400", sub: profitGrowth !== 0 ? `${profitGrowth >= 0 ? "+" : ""}${profitGrowth.toFixed(1)}% vs mois dernier` : undefined },
     { label: "Marge nette moy.", value: `${avgMargin.toFixed(1)}%`, icon: Percent, color: avgMargin > 30 ? "text-green-400" : avgMargin > 10 ? "text-yellow-400" : "text-red-400", sub: "Sur 6 mois" },
     { label: "Meilleur mois", value: bestMonth?.mois ?? "—", icon: Award, color: "text-primary", sub: bestMonth ? formatFCFA(bestMonth.profit) : undefined },
-    { label: "Objectif mensuel", value: last ? `${Math.min(100, Math.round((last.profit / 500000) * 100))}%`, icon: Target, color: "text-blue-400", sub: "Objectif : 500 000 FCFA" },
+{ label: "Objectif mensuel", value: last ? `${Math.min(100, Math.round((last.profit / 500000) * 100))}%` : "—", icon: Target, color: "text-blue-400", sub: "Objectif : 500 000 FCFA" },
   ];
 
   return (
