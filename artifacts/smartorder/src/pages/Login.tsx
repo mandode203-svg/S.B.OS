@@ -15,6 +15,7 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,16 +28,27 @@ export default function Login() {
     try {
       const res = await fetch(`${API}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         toast({
           title: "Erreur",
-          description: data.error,
+          description: data?.error || "Erreur de connexion",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data?.token || !data?.business) {
+        toast({
+          title: "Erreur",
+          description: "Réponse serveur invalide",
           variant: "destructive",
         });
         return;
@@ -44,10 +56,10 @@ export default function Login() {
 
       login(data.token, data.business);
       navigate("/dashboard");
-    } catch {
+    } catch (err) {
       toast({
         title: "Erreur",
-        description: "Connexion impossible",
+        description: "Connexion impossible (serveur indisponible)",
         variant: "destructive",
       });
     } finally {
