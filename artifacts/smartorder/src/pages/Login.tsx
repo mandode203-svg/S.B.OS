@@ -25,15 +25,26 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
-        toast({ title: "Erreur", description: data.error, variant: "destructive" });
+        toast({
+          title: "Erreur",
+          description: data.error,
+          variant: "destructive",
+        });
         return;
       }
+
       login(data.token, data.business);
       navigate("/dashboard");
     } catch {
-      toast({ title: "Erreur", description: "Connexion impossible", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: "Connexion impossible",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -47,7 +58,9 @@ export default function Login() {
             <ChefHat className="w-6 h-6 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-serif font-bold">Connexion</h1>
-          <p className="text-sm text-muted-foreground mt-1">Accédez à votre espace SmartOrder</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Accédez à votre espace SmartOrder
+          </p>
         </div>
 
         <div className="bg-card border border-border rounded p-6">
@@ -58,12 +71,13 @@ export default function Login() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre@email.com"
                 required
                 className="mt-1"
               />
             </div>
+
             <div>
               <Label htmlFor="password">Mot de passe</Label>
               <div className="relative mt-1">
@@ -71,7 +85,7 @@ export default function Login() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                 />
@@ -80,10 +94,15 @@ export default function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Connexion..." : "Se connecter"}
             </Button>
@@ -92,7 +111,10 @@ export default function Login() {
 
         <p className="text-center text-sm text-muted-foreground mt-4">
           Pas encore de compte ?{" "}
-          <Link href="/register" className="text-primary hover:underline font-medium">
+          <Link
+            href="/signup"
+            className="text-primary hover:underline font-medium"
+          >
             Créer un compte
           </Link>
         </p>
