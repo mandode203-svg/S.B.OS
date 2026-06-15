@@ -1,0 +1,1374 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: SmartOrder AI API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: products
+    description: Product catalog management
+  - name: orders
+    description: Order management
+  - name: reservations
+    description: Reservation management
+  - name: clients
+    description: Client CRM
+  - name: campaigns
+    description: Marketing campaigns
+  - name: transactions
+    description: Payment transactions
+  - name: reports
+    description: Analytics and reports
+  - name: business
+    description: Business settings
+  - name: staff
+    description: Staff management
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: registerBusiness
+      tags: [auth]
+      summary: Register a new business
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginBusiness
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current business
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+
+  # Business
+  /business:
+    put:
+      operationId: updateBusiness
+      tags: [business]
+      summary: Update business settings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+
+  /business/{slug}:
+    get:
+      operationId: getBusinessBySlug
+      tags: [business]
+      summary: Get public business info and products
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicBusiness"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # Products
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all products for authenticated business
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: available
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # Orders
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List orders with filters
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+        - name: orderType
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new order (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get single order (public, for tracking)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/{id}/status:
+    put:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: Update order status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderStatusUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  # Reservations
+  /reservations:
+    get:
+      operationId: listReservations
+      tags: [reservations]
+      summary: List reservations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reservation"
+    post:
+      operationId: createReservation
+      tags: [reservations]
+      summary: Create a reservation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+
+  /reservations/{id}:
+    put:
+      operationId: updateReservation
+      tags: [reservations]
+      summary: Update a reservation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+
+  # Clients
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List clients with search and sort
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get client profile with order history
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientProfile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # Campaigns
+  /campaigns:
+    get:
+      operationId: listCampaigns
+      tags: [campaigns]
+      summary: List campaigns
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [campaigns]
+      summary: Create a campaign
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  # Transactions
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions with filters
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: method
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a transaction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  # Reports
+  /reports/summary:
+    get:
+      operationId: getReportSummary
+      tags: [reports]
+      summary: Revenue, orders, avg order value summary
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportSummary"
+
+  /reports/top-products:
+    get:
+      operationId: getTopProducts
+      tags: [reports]
+      summary: Top selling products
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopProduct"
+
+  /reports/top-clients:
+    get:
+      operationId: getTopClients
+      tags: [reports]
+      summary: Top spending clients
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopClient"
+
+  /reports/hourly:
+    get:
+      operationId: getHourlyReport
+      tags: [reports]
+      summary: Orders count grouped by hour and day of week
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HourlyDataPoint"
+
+  /reports/daily-revenue:
+    get:
+      operationId: getDailyRevenue
+      tags: [reports]
+      summary: Daily revenue for the last N days
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyRevenue"
+
+  /reports/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [reports]
+      summary: Dashboard KPI stats (today revenue, today orders, total clients, loyalty rate)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # Staff
+  /staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List staff
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Staff"
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Invite a staff member
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+
+  /staff/{id}:
+    delete:
+      operationId: deleteStaff
+      tags: [staff]
+      summary: Remove staff member
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    # Auth
+    RegisterInput:
+      type: object
+      required: [name, type, email, phone, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        address:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, business]
+      properties:
+        token:
+          type: string
+        business:
+          $ref: "#/components/schemas/Business"
+
+    # Business
+    Business:
+      type: object
+      required: [id, slug, name, type, email, phone, plan, createdAt]
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        plan:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    BusinessUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        phone:
+          type: string
+        address:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+
+    PublicBusiness:
+      type: object
+      required: [id, slug, name, type, phone, products]
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        phone:
+          type: string
+        address:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+
+    # Product
+    Product:
+      type: object
+      required: [id, businessId, name, price, category, available, stockQty, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        available:
+          type: boolean
+        stockQty:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ProductInput:
+      type: object
+      required: [name, price, category]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        category:
+          type: string
+        photoUrl:
+          type: string
+        available:
+          type: boolean
+        stockQty:
+          type: integer
+
+    ProductUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        available:
+          type: boolean
+        stockQty:
+          type: integer
+
+    # Order
+    OrderItem:
+      type: object
+      required: [productId, name, price, quantity]
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+
+    Order:
+      type: object
+      required: [id, businessId, clientName, clientPhone, items, total, depositAmount, status, orderType, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        clientName:
+          type: string
+        clientPhone:
+          type: string
+        clientEmail:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        total:
+          type: number
+        depositAmount:
+          type: number
+        status:
+          type: string
+        orderType:
+          type: string
+        scheduledAt:
+          type: ["string", "null"]
+          format: date-time
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderInput:
+      type: object
+      required: [businessId, clientName, clientPhone, items, total, orderType]
+      properties:
+        businessId:
+          type: string
+        clientName:
+          type: string
+        clientPhone:
+          type: string
+        clientEmail:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        total:
+          type: number
+        depositAmount:
+          type: number
+        orderType:
+          type: string
+        scheduledAt:
+          type: string
+        notes:
+          type: string
+
+    OrderStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    # Reservation
+    Reservation:
+      type: object
+      required: [id, businessId, clientName, clientPhone, dateTime, partySize, depositAmount, status, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        clientName:
+          type: string
+        clientPhone:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        partySize:
+          type: integer
+        tableOrRoom:
+          type: ["string", "null"]
+        depositAmount:
+          type: number
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ReservationInput:
+      type: object
+      required: [clientName, clientPhone, dateTime, partySize]
+      properties:
+        clientName:
+          type: string
+        clientPhone:
+          type: string
+        dateTime:
+          type: string
+        partySize:
+          type: integer
+        tableOrRoom:
+          type: string
+        depositAmount:
+          type: number
+        notes:
+          type: string
+
+    ReservationUpdate:
+      type: object
+      properties:
+        clientName:
+          type: string
+        clientPhone:
+          type: string
+        dateTime:
+          type: string
+        partySize:
+          type: integer
+        tableOrRoom:
+          type: ["string", "null"]
+        depositAmount:
+          type: number
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+
+    # Client
+    Client:
+      type: object
+      required: [id, businessId, name, phone, totalOrders, totalSpent, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        totalOrders:
+          type: integer
+        totalSpent:
+          type: number
+        lastOrderAt:
+          type: ["string", "null"]
+          format: date-time
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ClientProfile:
+      type: object
+      required: [id, businessId, name, phone, totalOrders, totalSpent, createdAt, orders]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        totalOrders:
+          type: integer
+        totalSpent:
+          type: number
+        lastOrderAt:
+          type: ["string", "null"]
+          format: date-time
+        favoriteProducts:
+          type: ["object", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+
+    # Campaign
+    Campaign:
+      type: object
+      required: [id, businessId, name, segment, channel, message, status, sentCount, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        name:
+          type: string
+        segment:
+          type: string
+        channel:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        scheduledAt:
+          type: ["string", "null"]
+          format: date-time
+        sentCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    CampaignInput:
+      type: object
+      required: [name, segment, channel, message]
+      properties:
+        name:
+          type: string
+        segment:
+          type: string
+        channel:
+          type: string
+        message:
+          type: string
+        scheduledAt:
+          type: string
+
+    # Transaction
+    Transaction:
+      type: object
+      required: [id, businessId, amount, method, status, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        orderId:
+          type: ["string", "null"]
+        amount:
+          type: number
+        method:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionInput:
+      type: object
+      required: [amount, method]
+      properties:
+        orderId:
+          type: string
+        amount:
+          type: number
+        method:
+          type: string
+        status:
+          type: string
+
+    # Staff
+    Staff:
+      type: object
+      required: [id, businessId, name, email, role, createdAt]
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    StaffInput:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+
+    # Reports
+    ReportSummary:
+      type: object
+      required: [totalRevenue, ordersCount, avgOrderValue, period]
+      properties:
+        totalRevenue:
+          type: number
+        ordersCount:
+          type: integer
+        avgOrderValue:
+          type: number
+        period:
+          type: string
+
+    TopProduct:
+      type: object
+      required: [productId, name, totalSold, totalRevenue]
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        totalSold:
+          type: integer
+        totalRevenue:
+          type: number
+        category:
+          type: string
+
+    TopClient:
+      type: object
+      required: [clientId, name, phone, totalOrders, totalSpent]
+      properties:
+        clientId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        totalOrders:
+          type: integer
+        totalSpent:
+          type: number
+
+    HourlyDataPoint:
+      type: object
+      required: [hour, dayOfWeek, count]
+      properties:
+        hour:
+          type: integer
+        dayOfWeek:
+          type: integer
+        count:
+          type: integer
+
+    DailyRevenue:
+      type: object
+      required: [date, revenue, ordersCount]
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+        ordersCount:
+          type: integer
+
+    DashboardStats:
+      type: object
+      required: [todayRevenue, todayOrders, totalClients, loyaltyRate, recentOrders]
+      properties:
+        todayRevenue:
+          type: number
+        todayOrders:
+          type: integer
+        totalClients:
+          type: integer
+        loyaltyRate:
+          type: number
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"

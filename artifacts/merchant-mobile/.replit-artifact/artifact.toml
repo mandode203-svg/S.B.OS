@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/mobile/"
+title = "SmartOrder Mobile"
+version = "1.0.0"
+id = "artifacts/merchant-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/mobile/" ]
+localPort = 25799
+
+[services.development]
+run = "pnpm --filter @workspace/merchant-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/merchant-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/merchant-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "25799"
+BASE_PATH = "/mobile/"

@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/smartorder run build",
+  "outputDirectory": "artifacts/smartorder/dist",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://smartorder-ai-qi7q.onrender.com/api/$1"
+    },
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

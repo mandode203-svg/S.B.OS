@@ -1,0 +1,28 @@
+Bonjour ! Nous allons maintenant finaliser le volet d'administration globale (Super Admin) à l'adresse '/admin' pour que je puisse piloter l'ensemble du SaaS. 
+
+S'il te plaît, implémente de manière hautement sécurisée les éléments suivants :
+
+1. MIDDLEWARE DE SÉCURITÉ ADMIN (BACKEND) :
+- Assure-toi que toutes les routes commençant par '/api/admin/' possèdent un middleware de sécurité strict.
+- Ce middleware doit décoder le jeton de l'utilisateur connecté via Supabase Auth et vérifier si ses métadonnées contiennent bien '"role": "admin"'. Si ce n'est pas le cas, renvoie une erreur HTTP 403 (Accès refusé). Aucun commerçant standard ne doit pouvoir accéder à ces routes.
+
+2. CRÉATION DES ENDPOINTS ADMIN (BACKEND) :
+- GET '/api/admin/stats' : Doit interroger Supabase et retourner les indicateurs globaux du SaaS :
+  * Le nombre total de boutiques ('stores') inscrites.
+  * Le nombre total de produits ('products') créés sur la plateforme.
+  * Le nombre total de commandes ('orders') passées à travers tout le SaaS.
+  * Le nombre total de notifications envoyées (en comptant les lignes de la table 'communication_logs').
+- GET '/api/admin/shops' : Retourne la liste complète de tous les commerces inscrits, avec : leur ID, leur nom ('business_name'), leur secteur ('category'), leur forfait actuel ('subscription_plan'), leur état ('active' : true/false), leur date de création, et l'e-mail du gérant (owner_id).
+- PUT '/api/admin/shops/:shopId/plan' : Permet à l'admin de modifier manuellement le forfait d'une boutique (Starter, Business, Pro/Premium) dans la table 'stores'.
+- PUT '/api/admin/shops/:shopId/toggle' : Permet à l'admin de basculer l'état 'active' d'une boutique (TRUE ou FALSE). Si une boutique est désactivée ('active = false'), elle doit être immédiatement déconnectée et sa vitrine publique doit afficher un message "Boutique temporairement fermée".
+
+3. INTERFACE UTILISATEUR ADMIN (FRONTEND - AdminPanel.tsx) :
+- Crée ou mets à jour la page '/admin' avec un design sombre et doré haut de gamme, réservé au propriétaire du SaaS.
+- Affiche 4 grandes cartes de statistiques globales (KPIs) avec des icônes :
+  * Boutiques Totales | Commandes Totales | Notifications Envoyées | Chiffre d'Affaires Global Cumulé.
+- Affiche un grand tableau contenant la liste de toutes les boutiques inscrites avec leurs détails.
+- Pour chaque ligne de boutique, ajoute des boutons d'actions interactifs :
+  * Un commutateur (Switch) pour Activer / Désactiver la boutique (modération instantanée).
+  * Un sélecteur (Dropdown) pour changer manuellement son abonnement (Starter, Business, Pro/Premium) pour gérer manuellement les paiements que tu recevras hors-ligne.
+
+Vérifie que l'intégralité du code compile proprement sans aucune erreur TypeScript ou de serveur, et dis-moi quand le volet Super-Admin est prêt pour mes premiers tests en direct.
