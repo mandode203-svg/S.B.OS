@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { ChefHat, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const API =
+  import.meta.env.VITE_API_URL ||
+  "https://smartorder-ai-qi7q.onrender.com";
+
 export default function Login() {
   const [, navigate] = useLocation();
   const { login } = useAuth();
@@ -19,8 +23,9 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -111,10 +116,7 @@ export default function Login() {
 
         <p className="text-center text-sm text-muted-foreground mt-4">
           Pas encore de compte ?{" "}
-          <Link
-            href="/signup"
-            className="text-primary hover:underline font-medium"
-          >
+          <Link href="/signup" className="text-primary hover:underline font-medium">
             Créer un compte
           </Link>
         </p>
