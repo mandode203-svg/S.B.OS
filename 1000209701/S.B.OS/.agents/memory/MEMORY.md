@@ -1,0 +1,3 @@
+- [DB schema rebuild order](db-schema-rebuild.md) — after lib/db schema changes, must run `typecheck:libs` before api-server typecheck or TS2305 errors appear
+- [SmartOrder auth pattern](smartorder-auth.md) — JWT in localStorage as `smartorder_token`; custom-fetch auto-attaches; socket.io path `/api/socket.io`
+- [Admin access pattern](admin-access.md) — admin check via Supabase user_metadata `role:"admin"` + ADMIN_EMAILS env fallback; role is NOT in JWT payload

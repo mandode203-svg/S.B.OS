@@ -1,0 +1,53 @@
+CONSIGNE CRUCIALE DE SÉCURITÉ : Analyse l'intégralité du projet avant d'écrire la moindre ligne de code. Ne modifie pas, ne détruis pas et n'endommage pas notre système d'authentification Supabase (auth.ts) ni nos tables de base de données existantes ('stores', 'products', 'orders', 'reservations', 'communication_logs') qui fonctionnent déjà parfaitement sur notre projet.
+
+Je souhaite que tu intègres de manière sécurisée et robuste l'ensemble des fonctionnalités et optimisations avancées suivantes, en adaptant le frontend et le backend :
+
+1. ESSAI GRATUIT DE 15 JOURS & ACCÈS PREMIUM :
+- Lors de l'inscription (Register), ajoute automatiquement un champ 'trial_ends_at' dans la table 'stores' réglé sur NOW() + INTERVAL '15 days'. (Exécute d'abord l'alter table SQL au besoin : ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '15 days');).
+- Modifie la logique de contrôle d'accès (Feature Gating) : tant que la date actuelle est inférieure à 'trial_ends_at' (période d'essai active), le commerçant doit avoir accès à l'INTÉGRALITÉ des fonctionnalités de la plateforme (comme s'il était sur le plan Pro/Premium).
+- Une fois l'essai expiré, ses accès sont restreints selon la logique de son plan d'origine ('Starter' par défaut) :
+  * Plan 'Starter' : Verrouille l'onglet "Marketing" et "Paiements" [10]. Bloque la création de produits si >= 15. Désactive l'assistant virtuel IA.
+  * Plan 'Business' : Verrouille l'onglet "Marketing" [10]. Bloque la création de produits si >= 100. Permet max 2 employés.
+  * Plan 'Pro/Premium' : Aucun cadenas, accès total illimité [25].
+- Sur les onglets verrouillés du menu latéral (Sidebar), ajoute un cadenas jaune 🔒. Si un commerçant clique dessus, ouvre une belle fenêtre modale (Pop-up) l'incitant à passer à l'abonnement supérieur.
+- Dans 'Parametres.tsx', affiche son plan actuel, la date de fin de son essai gratuit, et ajoute un sélecteur lui permettant de basculer manuellement son plan (pour tester les restrictions).
+
+2. BANNIÈRE D'ONBOARDING DU DASHBOARD :
+- Immédiatement après une inscription réussie, affiche une bannière d'alerte élégante en haut de la page d'accueil du Dashboard :
+  * "👋 Bienvenue sur SmartOrder AI ! Pour activer votre assistant virtuel et recevoir vos notifications de commandes, complétez votre profil dans les 'Paramètres' en configurant vos identifiants WhatsApp et vos coordonnées de paiement."
+  * Ajoute un bouton d'action "Configurer maintenant" qui redirige directement vers l'onglet Paramètres [25].
+
+3. UPLOAD DU LOGO SUR SUPABASE STORAGE (PARAMÈTRES) :
+- Dans l'onglet Paramètres ('Parametres.tsx'), remplace le champ texte de saisie d'URL pour le logo de l'entreprise par un véritable bouton de téléchargement de fichier (File Input / Uploader).
+- Configure le client Supabase pour téléverser (upload) le fichier image sélectionné directement dans le bucket public de stockage nommé 'logos' sur Supabase.
+- Enregistre l'URL publique générée de cette image dans le champ 'logo_url' (ou image_url) de la ligne de la boutique dans la table 'stores'.
+
+4. PORTAIL CLIENT UNIFIÉ & VUES DE COMMANDE :
+- Lorsque le client clique sur le lien public de la boutique (/store/:storeId), affiche un portail d'accueil client unifié et élégant présentant trois choix clairs :
+  a. "📖 Consulter notre Catalogue" : pour voir les produits et commander.
+  b. "📅 Faire une Réservation" : pour réserver un créneau (table ou chambre).
+  c. "💬 Discuter avec l'Assistant Virtuel" : un écran de chat interactif en plein écran où le client parle en langage naturel avec l'assistant SmartOrder IA pour commander ou réserver par texte.
+- Assure-toi que les QR Codes regroupés dans "Paramètres" (onglet "Commande / Réservation") génèrent et téléchargent proprement les codes encodant les nouvelles URLs de vitrine de Supabase (ex: /store/:storeId et /book/:storeId) [26].
+
+5. CONFIRMATION DE RÉSERVATION PAR WHATSAPP :
+- Lors de la création d'une réservation (POST /api/reservations) :
+  * Envoie une notification WhatsApp automatique au client avec sa référence de réservation et les détails (date, heure, nombre de personnes, établissement).
+  * Envoie une alerte WhatsApp à l'établissement.
+  * Utilise notre routage WhatsApp dynamique (qui lit d'abord 'whatsapp_instance_id' et 'whatsapp_token' dans la table 'stores', ou utilise le fallback .env si vide) [1.2.3].
+  * Enregistre ces logs de notification dans la table 'communication_logs' [10].
+
+6. MIGRATION DES CLIENTS VERS SUPABASE (clients.ts) :
+- Migre la logique de gestion des clients pour qu'elle utilise Supabase à 100 %.
+- Si elle n'existe pas, assure-toi de l'existence de la table 'clients' dans Supabase : id (UUID PRIMARY KEY), store_id (UUID), name (text), phone (text), email (text), total_orders (int, défaut 0), total_spent (numeric, défaut 0.00), created_at. (Active le RLS pour cette table).
+- À chaque validation de commande ou réservation, déclenche une tâche en arrière-plan (non-bloquante) pour mettre à jour la table 'clients' :
+  * Si le numéro de téléphone (phone) existe déjà pour ce 'store_id', incrémente 'total_orders' (+1) et ajoute le montant à 'total_spent'.
+  * S'il n'existe pas, crée une nouvelle fiche client [11, 2].
+- Mets à jour l'onglet "Clients" du Dashboard gérant pour lister ces fiches depuis Supabase.
+
+7. COMPTEURS TEMPS RÉEL (WEBSOCKETS) :
+- Assure-toi que le Dashboard affiche des statistiques en temps réel (commandes du jour, chiffre d'affaires, clients) sans rechargement de page [15].
+- Chaque KPI s'anime en douceur lors des changements de valeur, et la carte KPI clignote brièvement en surbrillance dorée pendant 800ms à chaque mise à jour.
+- Affiche un indicateur de connexion Wifi vert (connecté) / gris (WifiOff - déconnecté) avec animation ping lors des rafraîchissements.
+- Affiche une notification de type "Toast" en bas de l'écran dès qu'une nouvelle commande ou réservation arrive en direct.
+
+Vérifie que l'intégralité du code compile proprement sans aucune erreur TypeScript ou de serveur, et lance l'exécution des serveurs de test une fois terminé.

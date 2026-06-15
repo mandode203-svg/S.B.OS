@@ -1,0 +1,55 @@
+modules = ["nodejs-24"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[[ports]]
+localPort = 3000
+externalPort = 3003
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 8082
+externalPort = 3001
+
+[[ports]]
+localPort = 24658
+externalPort = 3000
+
+[[ports]]
+localPort = 25799
+externalPort = 3002
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+ORANGE_MONEY_TEST_MODE = "true"
+ORANGE_MONEY_CLIENT_ID = "test_om_client_id_smartorder"
+ORANGE_MONEY_CLIENT_SECRET = "test_om_client_secret_smartorder"
+ORANGE_MONEY_MERCHANT_KEY = "test_om_merchant_key_smartorder"
